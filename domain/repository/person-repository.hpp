@@ -15,7 +15,6 @@
 
 
 class PersonRepository {
-
 public:
 
     PersonRepository()
@@ -24,9 +23,20 @@ public:
 
     void save(const Person& person)
     {
+        int nextRow = 1;
+        auto cursor = collection.find({});
+        for (auto&& doc : cursor) {
+            if (doc.find("row") != doc.end()) {
+                int currentRow = doc["row"].get_int32();
+                if (currentRow >= nextRow) {
+                    nextRow = currentRow+ 1;
+                }
+            }
+        }
         auto doc = bsoncxx::builder::basic::document{};
         doc.append(
-         bsoncxx::builder::basic::kvp("name", person.name),
+         bsoncxx::builder::basic::kvp("row", nextRow),
+            bsoncxx::builder::basic::kvp("name", person.name),
             bsoncxx::builder::basic::kvp("surname", person.surname),
             bsoncxx::builder::basic::kvp("phone", person.phone),
             bsoncxx::builder::basic::kvp("mail", person.mail)
@@ -36,34 +46,44 @@ public:
         collection.insert_one(doc.view());
     }
 
-    Person findById(const std::string& id) {
-        auto result = collection.find_one(bsoncxx::builder::basic::make_document(
-            bsoncxx::builder::basic::kvp("_id", id)));
+    Person findPerson(const std::string& name) {
+        auto cursor = collection.find(bsoncxx::builder::basic::make_document(
+            bsoncxx::builder::basic::kvp("name", name)));
 
-        if (result) {
-            auto view = result->view();
+        bool found=false;
 
-            std::string id = view["_id"].get_oid().value.to_string();
-            std::string name = view["name"].get_value().get_string().value.data();
-            std::string surname = view["surname"].get_value().get_string().value.data();
-            std::string phone = view["phone"].get_value().get_string().value.data();
-            std::string mail = view["mail"].get_value().get_string().value.data();
-            return Person(id, name, surname, phone, mail);
+        for (auto&& doc : cursor) {
+            found=true;
+            Person person(doc);
+            person.print_info();
         }
-        std::cout << "Belirtilen kişi bulunamadı." << std::endl;
+        /*auto view = result->view();
+        std::string id = view["_id"].get_oid().value.to_string();
+        int row = view["row"].get_int32();
+        /*row kısmını ekle
+        std::string name = view["name"].get_value().get_string().value.data();
+        std::string surname = view["surname"].get_value().get_string().value.data();
+        std::string phone = view["phone"].get_value().get_string().value.data();
+        std::string mail = view["mail"].get_value().get_string().value.data();
+        return Person(id, row, name, surname, phone, mail);*/
+        if (!found) {
+            throw std::runtime_error("Belirtilen kişi bulunamadı.");
+        }
     }
+
 
     std::vector<Person> findAll() {
         std::vector<Person> persons;
 
         for (auto&& doc : collection.find({})) {
-            std::string id = doc["_id"].get_oid().value.to_string();
+            persons.emplace_back(doc);
+           /* std::string id = doc["_id"].get_oid().value.to_string();
+            int row = doc["row"].get_int32();
             std::string name = doc["name"].get_string().value.data();
             std::string surname = doc["surname"].get_string().value.data();
             std::string phone = doc["phone"].get_string().value.data();
-            std::string mail = doc["mail"].get_string().value.data();
+            std::string mail = doc["mail"].get_string().value.data();*/
 
-            persons.emplace_back(id, name, surname, phone, mail);
         }
 
         return persons;

@@ -11,46 +11,39 @@
 
 class PersonService {
 
-    private:
-    PersonRepository personRepository;
+    PersonRepository& personRepository;
+
 
 public:
-
 
     PersonService();
 
     explicit PersonService(PersonRepository& repo) : personRepository(repo) {}
 
-    void PersonService::savePerson(const Person &person) {
+    void savePerson(const Person& person) {
 
-        personRepository().save(person);
-
+        personRepository.save(person);
     }
 
-    void PersonService::updatePerson(const Person &person, int id) {
+    void updatePerson(const Person& person, const std::string& id) {
 
-        personRepository().update(person, person.id());
+        personRepository.update(id, person);
     }
 
-    void PersonService::removePerson(const Person &person) {
+    void removePerson(const std::string& id) {
 
-        personRepository().remove(person);
+        personRepository.remove(id);
     }
+
     std::vector<Person> findAll() {
 
-        return personRepository().findAll();
+        return personRepository.findAll();
     }
 
-    void PersonService::findById(const Person &person , int id) {
+    Person findPerson(const std::string& id) {
 
-        return personRepository().findById(person.id);
+        return personRepository.findPerson(id);
     }
-
-    private:
-    PersonRepository PersonRepository;
-
 };
-
-
 
 #endif //PERSON_SERVICE_HPP
