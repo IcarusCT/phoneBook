@@ -12,7 +12,7 @@
 class PersonService {
 
     private:
-    PersonRepository& personRepository;
+    PersonRepository personRepository;
 
 public:
 

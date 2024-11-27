@@ -2,10 +2,12 @@
 #include <mongocxx/client.hpp>
 #include <bsoncxx/json.hpp>
 #include <bsoncxx/builder/stream/document.hpp>
+#include <bsoncxx/builder/basic/document.hpp>
+#include <bsoncxx/builder/basic/kvp.hpp>
 #include "repository/person-repository.hpp"
-#include "bsoncxx/types.hpp"
+#include <bsoncxx/types.hpp>
 #include "person/person.hpp"
-
+#include <mongocxx/exception/exception.hpp>
 
 int main()
 {
@@ -25,23 +27,16 @@ int main()
     std::cout << "mail:";
     std::getline(std::cin , mail);
 
-    Person person(0, name, surname, phone, mail);
+    Person person("", name, surname, phone, mail);
+    PersonRepository repository;
 
-    bsoncxx::builder::stream::document document{};
-    document << "name" << name;
-             << "surname" << surname;
-             << "phone" << phone
-             << "mail" << mail;
+    try {
+        repository.save(person);
 
-    if (auto result = collection.insert_one(document.view()))
-    {
-        std::cout << "Veri başarıyla kaydedildi! ID: "
-                  << result->inserted_id().get_oid().value.to_string() << std::endl;
+    } catch (const mongocxx::exception& e) {
+        std::cerr << "Veritabanı hatası: " << e.what() << std::endl;
     }
 
-    else {
-        std::cerr << "Veri kaydedilirken bir hata oluştu." << std::endl;
-    }
 
     return 0;
 }

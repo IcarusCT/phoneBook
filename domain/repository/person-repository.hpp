@@ -15,13 +15,12 @@
 
 
 class PersonRepository {
-    PersonRepository()
-    : client(mongocxx::uri{}),
-      collection(client["phonebook"]["contacts"]) {}
-
 
 public:
 
+    PersonRepository()
+       : client(mongocxx::uri{}),
+         collection(client["phonebook"]["contacts"]) {}
 
     void save(const Person& person)
     {
@@ -32,6 +31,7 @@ public:
             bsoncxx::builder::basic::kvp("phone", person.phone),
             bsoncxx::builder::basic::kvp("mail", person.mail)
         );
+
         std::cout << "Kişi başarıyla kaydedildi. "<< bsoncxx::to_json(doc.view()) << std::endl;
         collection.insert_one(doc.view());
     }
@@ -87,10 +87,8 @@ public:
        )
    );
 
-        // Belgeyi güncelleme
         auto result = collection.update_one(filter.view(), updateDoc.view());
 
-        // Güncelleme sonucu kontrolü
         if (result && result->modified_count() == 1) {
             std::cout << "Kullanıcı başarıyla güncellendi." << std::endl;
         } else {
