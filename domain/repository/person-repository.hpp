@@ -16,7 +16,6 @@
 
 class PersonRepository {
 public:
-
     PersonRepository()
        : client(mongocxx::uri{}),
          collection(client["phonebook"]["contacts"]) {}
@@ -57,73 +56,81 @@ public:
             Person person(doc);
             person.print_info();
         }
-        /*auto view = result->view();
-        std::string id = view["_id"].get_oid().value.to_string();
-        int row = view["row"].get_int32();
-        /*row kısmını ekle
-        std::string name = view["name"].get_value().get_string().value.data();
-        std::string surname = view["surname"].get_value().get_string().value.data();
-        std::string phone = view["phone"].get_value().get_string().value.data();
-        std::string mail = view["mail"].get_value().get_string().value.data();
-        return Person(id, row, name, surname, phone, mail);*/
+
         if (!found) {
             throw std::runtime_error("Belirtilen kişi bulunamadı.");
         }
     }
 
 
-    std::vector<Person> findAll() {
+    std::vector<Person> listAll() {
         std::vector<Person> persons;
 
         for (auto&& doc : collection.find({})) {
             persons.emplace_back(doc);
-           /* std::string id = doc["_id"].get_oid().value.to_string();
-            int row = doc["row"].get_int32();
-            std::string name = doc["name"].get_string().value.data();
-            std::string surname = doc["surname"].get_string().value.data();
-            std::string phone = doc["phone"].get_string().value.data();
-            std::string mail = doc["mail"].get_string().value.data();*/
-
         }
 
         return persons;
     }
 
 
-    void update(const std::string& id, const Person& updatedPerson) {
+    void update(const int row, const Person& updatedPerson) {
 
-        auto filter = bsoncxx::builder::basic::make_document(
-        bsoncxx::builder::basic::kvp("_id", (bsoncxx::oid(id)))
-    );
-        auto updateDoc = bsoncxx::builder::basic::make_document(
-
-        bsoncxx::builder::basic::kvp("$set",bsoncxx::builder::basic::make_document(
-
+        auto result = collection.update_one(
+               bsoncxx::builder::basic::make_document(
+                   bsoncxx::builder::basic::kvp("row", row)
+               ),
+               bsoncxx::builder::basic::make_document(
+               bsoncxx::builder::basic::kvp("$set",bsoncxx::builder::basic::make_document(
                bsoncxx::builder::basic::kvp("name", updatedPerson.name),
                bsoncxx::builder::basic::kvp("surname", updatedPerson.surname),
                bsoncxx::builder::basic::kvp("phone", updatedPerson.phone),
                bsoncxx::builder::basic::kvp("mail", updatedPerson.mail)
            )
+           )
        )
-   );
+       );
 
-        auto result = collection.update_one(filter.view(), updateDoc.view());
-
-        if (result && result->modified_count() == 1) {
-            std::cout << "Kullanıcı başarıyla güncellendi." << std::endl;
-        } else {
-            std::cout << "Belirtilen kişi bulunamadı." << std::endl;
+        if (!result) {
+            throw std::runtime_error ("Belirtilen kişi bulunamadı.");
         }
 
     }
 
-    void remove(const std::string& id) {
+    void remove(const int row) {
         auto filter = bsoncxx::builder::basic::make_document(
-        bsoncxx::builder::basic::kvp("_id", bsoncxx::oid(id))
-    );
+         bsoncxx::builder::basic::kvp("row", row)
+     );
 
-        collection.delete_one(filter.view());
+        auto result = collection.delete_one(filter.view());
 
+        if (!result) {
+            throw std::runtime_error("Bu row numarasıyla bir kişi bulunamadı veya silinemedi.");
+        }
+    }
+
+    std::vector<Person> findPersonsByName(const std::string& name) {
+        std::vector<Person> persons;
+
+        auto cursor = collection.find(bsoncxx::builder::basic::make_document(
+            bsoncxx::builder::basic::kvp("name", name)));
+
+        for (auto&& doc : cursor) {
+            persons.emplace_back(doc);
+        }
+
+        return persons;
+    }
+
+    Person findByRow(int row) {
+        auto result = collection.find_one(bsoncxx::builder::basic::make_document(
+            bsoncxx::builder::basic::kvp("row", row)
+        ));
+
+        if (result) {
+            return Person(result->view());
+        }
+        throw std::runtime_error("Bu sıra numarasıyla bir kişi bulunamadı.");
     }
 
 

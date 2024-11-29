@@ -5,7 +5,7 @@
 #ifndef PERSON_HPP
 #define PERSON_HPP
 #include <string>
-
+#include <mongocxx/collection.hpp>
 
 class Person {
 
@@ -26,6 +26,7 @@ class Person {
 
     Person(const bsoncxx::document::view& view) {
         id = view["_id"].get_oid().value.to_string();
+        row = view["row"].get_int32();
         name = view["name"].get_string().value.data();
         surname = view["surname"].get_string().value.data();
         phone = view["phone"].get_string().value.data();
@@ -39,6 +40,7 @@ class Person {
         std::cout << "Phone: " << phone << std::endl;
         std::cout << "Mail: " << mail << std::endl;
     }
+
 
 };
 
