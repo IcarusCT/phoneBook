@@ -85,6 +85,17 @@ public:
         return personRepository.findByRow(row);
     }
 
+    bool isValidPhone(const std::string& phone) {
+        std::regex phoneRegex("^0[0-9]{10}$");
+        return std::regex_match(phone, phoneRegex, std::regex_constants::match_default);
+    }
+
+    bool isValidMail(const std::string& mail) {
+        std::regex mailRegex(R"(^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$)");
+        return std::regex_match(mail, mailRegex, std::regex_constants::match_default);
+    }
+
+
 
 };
 

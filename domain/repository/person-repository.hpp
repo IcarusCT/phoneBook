@@ -8,7 +8,8 @@
 #include <bsoncxx/document/value.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/stream/document.hpp>
-
+#include <bsoncxx/json.hpp>
+#include <regex>
 
 #ifndef PERSONREPOSITORY_HPP
 #define PERSONREPOSITORY_HPP
@@ -39,10 +40,21 @@ public:
             bsoncxx::builder::basic::kvp("surname", person.surname),
             bsoncxx::builder::basic::kvp("phone", person.phone),
             bsoncxx::builder::basic::kvp("mail", person.mail)
-        );
 
-        std::cout << "Kişi başarıyla kaydedildi. "<< bsoncxx::to_json(doc.view()) << std::endl;
-        collection.insert_one(doc.view());
+        );
+        if (!isValidPhone (person.phone)) {
+
+            throw std::runtime_error("Invalid phone");
+        }
+
+        if (!isValidMail (person.mail)) {
+
+            throw std::runtime_error("Invalid mail");
+        }
+
+            std::cout << "Kişi başarıyla kaydedildi. "<< bsoncxx::to_json(doc.view()) << std::endl;
+            collection.insert_one(doc.view());
+
     }
 
     Person findPerson(const std::string& name) {
@@ -136,6 +148,15 @@ public:
 
 private:
 
+    bool isValidPhone(const std::string& phone) {
+        std::regex phoneRegex("^0[0-9]{10}$");
+        return std::regex_match(phone, phoneRegex, std::regex_constants::match_default);
+    }
+
+    bool isValidMail(const std::string& mail) {
+        std::regex mailRegex(R"(^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$)");
+        return std::regex_match(mail, mailRegex, std::regex_constants::match_default);
+    }
         mongocxx::client client;
         mongocxx::collection collection;
 

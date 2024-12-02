@@ -9,6 +9,7 @@ set(CMAKE_PREFIX_PATH "/usr/local/include/mongocxx"
 
 find_package(mongocxx CONFIG REQUIRED)
 find_package(bsoncxx CONFIG REQUIRED)
+find_package(crow CONFIG REQUIRED)
 
 
 set(APPLICATION_SOURCES

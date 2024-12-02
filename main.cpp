@@ -1,20 +1,16 @@
 #include <iostream>
 #include <mongocxx/client.hpp>
-#include <bsoncxx/json.hpp>
-#include <bsoncxx/builder/stream/document.hpp>
-#include <bsoncxx/builder/basic/document.hpp>
-#include <bsoncxx/builder/basic/kvp.hpp>
 #include "repository/person-repository.hpp"
-#include <bsoncxx/types.hpp>
 #include "person/person.hpp"
 #include <mongocxx/exception/exception.hpp>
-
 #include "person-service.hpp"
+#include "crow.h"
 
 int main()
 {   PersonRepository repository;
     PersonService service(repository);
     std::string name, surname, phone, mail, option;
+    bool isValidPhone, isValidMail;
     int row;
 
     mongocxx::client client{mongocxx::uri{"mongodb://localhost:27017"}};
@@ -43,10 +39,10 @@ if (option == "1") {
 
     Person person("", row, name, surname, phone, mail);
 
-    try {
 
-        repository.save(person);
-    }
+    try {
+            repository.save(person);
+        }
 
     catch (const mongocxx::exception& e) {
 
@@ -60,9 +56,11 @@ if (option == "1") {
         }
 
     else if (option == "3") {
+
         service.findPersonsByName();
 
         try {
+
             int row;
             std::cout << "Güncellemek istediğiniz kişinin sıra numarasını girin: ";
             std::cin >> row;
